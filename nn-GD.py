@@ -12,7 +12,7 @@ X = np.array([ [0,0,1],
                [0,1,1],
                [1,0,1],
                [1,1,1] ])
-y = np.array([[0,1,1,0]])
+y = np.array([[0],[1],[1],[0]])
 np.random.seed(1)
 weight_0 = 2*np.random.random((3,hidden_layer))-1
 weight_1 = 2*np.random.random((hidden_layer,1))-1

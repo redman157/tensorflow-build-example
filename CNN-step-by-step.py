@@ -24,5 +24,18 @@ def conv_forward(A_prev, W, b, hparameters):
   (f,f,n_C_prev,n_C) = W.shape
   stride = hparameters['stride']
   pad = hparameters['pad']
-
-  
+  n_H = int((n_H_prev - f + 2 * pad) / stride) + 1
+  n_W = int((n_W_prev - f + 2 * pad) / stride) + 1
+  Z = np.zeros((m, n_H, n_W, n_C))
+  A_prev_pad = zero_pad(A_prev,pad)
+  for i in range(m):
+    a_prev_pad = A_prev_pad[i]
+    for h in range(n_H):
+      for w in range(n_W):
+        for c in range(n_C):
+          vert_start = h * stride
+          vert_end = vert_start + f
+          horiz_start = w * stride
+          horiz_end = horiz_start + f
+          a_slice_prev = a_prev_pad[vert_start:vert_end, horiz_start:horiz_end, :]
+          #[X0->Xend,Y0->Yend,Z0->Zend]

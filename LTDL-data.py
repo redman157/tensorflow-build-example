@@ -37,3 +37,5 @@ with tf.Session() as sess_test:
     sess_test.run(init)
     print("W1 = " + str(parameters["W1"].eval()[1,1,1]))
     print("W2 = " + str(parameters["W2"].eval()[1,1,1]))
+  
+					   

@@ -67,14 +67,38 @@ def pool_forward(A_prev,hparameters,mode = "max"):
   cache = (A_prev,hparameters)
   assert(A.shape == (m,n_H,n_W,n_C))
   return A,cache
-np.random.seed(1)
-A_prev = np.random.randn(2, 4, 4, 3)
-hparameters = {"stride" : 1, "f":4 }
-
-A, cache = pool_forward(A_prev, hparameters)
-print("mode = max")
-print("A max =", A)
-print()
-A, cache = pool_forward(A_prev, hparameters, mode = "average")
-print("mode = average")
-print("A average =", A)
+#29/8 
+def conv_backward(dZ,cache):
+  (A_prev, W, b, hparameters) = cache
+  (f, f, n_C_prev, n_C) = W.shape
+  (m, n_H_prev, n_W_prev, n_C_prev) = A_prev.shape
+  stride = hparameters["stride"]
+  pad = hparameters["pad"]
+  (m, n_H, n_W, n_C) = dZ.shape
+  dA_prev = np.zeros((m, n_H_prev, n_W_prev, n_C_prev))                           
+  dW = np.zeros((f, f, n_C_prev, n_C))
+  db = np.zeros((1, 1, 1, n_C))
+  A_prev_pad = zero_pad(A_prev, pad)
+  dA_prev_pad = zero_pad(dA_prev, pad)
+  for i range(m):
+    a_prev_pad = A_prev_pad[i]
+    da_prev_pad = dA_prev_pad[i]
+    for h in range(n_H):
+      for w in range(n_W):
+        for c in range(n_C):
+          horiz_start = w* stride
+          horiz_end   = horiz_start + f
+          vert_start  = h * stride
+          vert_end    = vert_start + f          
+          a_slice     = a_slice = a_prev_pad[vert_start:vert_end, horiz_start:horiz_end, :]
+          da_prev_pad[vert_start:vert_end, horiz_start:horiz_end, :] += W[:,:,:,c] * dZ[i, h, w, c]
+          dW[:,:,:,c] += a_slice * dZ[i, h, w, c]
+          db[:,:,:,c] += dZ[i, h, w, c]                
+        # Set the ith training example's dA_prev to the unpaded da_prev_pad (Hint: use X[pad:-pad, pad:-pad, :])
+        dA_prev[i, :, :, :] = da_prev_pad[pad:-pad, pad:-pad, :]
+    
+    
+    # Making sure your output shape is correct
+    assert(dA_prev.shape == (m, n_H_prev, n_W_prev, n_C_prev))
+    
+    return dA_prev, dW, db

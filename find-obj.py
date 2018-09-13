@@ -1,26 +1,72 @@
 import cv2
+import matplotlib.pyplot as plt
 import argparse
+def show(image):
+  plt.figure(figsize = (10,10))
+  plt.show(image, interpolation = 'nearest')
+
+def overlay_mask(mask, image):
+  rgb_mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+  img = cv2.addWeighted(rgb_mask,0.5, image,0.5,0)
+def find_biggest_coutour(image):
+  image = image.copy()
+  coutour, hierarchy = cv2.findCoutours(image,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+  
+  coutour_size = [(cv2.contourArea(contour),contour)for contour in coutours]
+  
 def load_image():
-parser = argparse.ArgumentParser()
-parser.add_argument("-i","--image",required = True, help = "Path to the image")
-args = vars(parser.parse_args())
-image = cv2.imread(args["image"])
-cv2.imshow("image",image)
-cv2.waitKey(0)
+  parse = argparse.ArgumentParser()
+  parse.add_argument("-i","--image",required = True, help = "Path to the image")
+  args = vars(parser.parse_args())
+  image = cv2.imread(args["image"])
+  cv2.imshow("image",image)
+  cv2.waitKey(0)
 def filter_obj(image):
   min_red = np.array([0,100,80])
   max_red = np.array([10,256,256])
-def 
 
 def find_obj(image):
+  # buoc 1 : tim va phan loai 
   image = load_image()
   image = cv2.cvtColor(image,cv2.BGR2RGB)
   max_dimension = max(image.shape)
   scale = 700/max_dimension #shape image
   # image stride 
   image = cv2.resize(image, None, fx= scale,fy= scale)
-  
+  # lam tron cac thanh phan cua matran
   image_blur = cv2.GaussianBlur(image, (7,7),0)
   image_blur_hsv = cv2.cvtColor(image_blur, cv2.COLOR_RGB2HSV)
+  # buoc 2 khoi tao filter 
+  min_red = np.array([0,100,80])
+  max_red = np.array([10,256,256])
   
+  # khoi tao cac chieu cua ma tran lan luot cua hinh anh Red
+  mask1 = cv2.inRange(image_blur,min_red,max_red)
+  #khoi tao filter diem sang
+  min_red2 = np.array([170,100,80])
+  max_red2 = np.array([180,256,256])
+  mask2 = cv2.inrange(image_blur,min_red2,max_red2)
   
+  # ket hop 2 mask 
+  mask = mask1 + mask2
+  
+  # buoc 3 tim vat the
+  # phan doan hinh anh phong doan vat the can tim
+  kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(15,15))
+  mask_closed = cv2.morphologyEx(mask,cv2.MORPH_CLOSE, kernel)
+  mask_clean = cv2.morphologyEx(mask_closed, cv2.MORPH_OPEN, kernel)
+  
+  # buoc 4 du doan tim hinh anh mong muon 
+  # tim vi tri mau xac xuat cao nhat + khoanh vung vien cua hinh anh
+  big_strawberry_contour, mask_strawberries = find_biggest_countour(mask_clean)
+  
+  # tim gioi han mau trong image
+  overplay = overplay_mask(mask_clean, image)
+  
+  # khoanh vung hinh anh
+  # bang cach tim gioi han mau va so sanh voi hinh anh can tim
+  circled = circle_contour(overplay, big_strawberry_contour)
+  show(circled)
+  # buoc 5 chuyen doi hinh anh sang hinh goc cua image
+  bgr = cv2.cvtColor(circled, cv2.COLOR_RGB2BGR)
+  return bgr

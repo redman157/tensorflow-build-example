@@ -1,19 +1,35 @@
+from __future__ import division
 import cv2
 import matplotlib.pyplot as plt
+import numpy as np
 import argparse
+from math import cos,sin
+green = (0,255,0)
 def show(image):
   plt.figure(figsize = (10,10))
-  plt.show(image, interpolation = 'nearest')
+  plt.imshow(image, interpolation = 'nearest')
 
 def overlay_mask(mask, image):
   rgb_mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
   img = cv2.addWeighted(rgb_mask,0.5, image,0.5,0)
+  return img
 def find_biggest_coutour(image):
   image = image.copy()
   coutour, hierarchy = cv2.findCoutours(image,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
   
   coutour_size = [(cv2.contourArea(contour),contour)for contour in coutours]
-  
+  biggest_contour = (contour_sizes, key = lambda x: x[0])[1]
+  #tra ve gia tri co duong vien mau do lon nhat
+  mask = np.zeros(image.shape, np.uint8)
+  cv2.drawContours(mask,[biggest_contour],-1, 255,-1)
+  return mask, biggest_contour
+def circle_contour(image,contour):
+  # khoanh vung duong vien cua hinh anh can tim lai
+  image_with_ellipse = image.copy()
+  ellipse = cv2.fitEllipse(contour)
+  # cong chung lai tao thanh hinh can tim
+  cv2.ellipse(image_with_ellipse,ellipse,green,2,cv2.CV_AA)
+  return image_with_ellipse
 def load_image():
   parse = argparse.ArgumentParser()
   parse.add_argument("-i","--image",required = True, help = "Path to the image")
@@ -70,3 +86,8 @@ def find_obj(image):
   # buoc 5 chuyen doi hinh anh sang hinh goc cua image
   bgr = cv2.cvtColor(circled, cv2.COLOR_RGB2BGR)
   return bgr
+# doc hinh anh can tin
+image = cv2.imread()
+result = find_obj(image)
+# viet no thanh hinh anh kac
+cv2.imwrite('',result)
